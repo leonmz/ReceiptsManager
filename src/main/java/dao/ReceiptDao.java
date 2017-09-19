@@ -49,6 +49,21 @@ public class ReceiptDao {
             Rlist.add(id);
 
     }
+    public List<ReceiptResponse> getAllReceipts() {
+        List<ReceiptsRecord> records = dsl.selectFrom(RECEIPTS).fetch();
+        ArrayList<ReceiptResponse> responses = new ArrayList<>();
+        for (ReceiptsRecord record : records) {
+            ArrayList<String> itstag = new ArrayList<>();
+            for (String tag : tags.keySet()){
+                if(tags.get(tag).contains(record.getId()))
+                    itstag.add(tag);
+            }
+            ReceiptResponse response = new ReceiptResponse(record);
+            response.setTags(itstag);
+            responses.add(response);
+        }
+        return responses;
+    }
 
     public List<ReceiptsRecord> getTag(String tag){
         List<ReceiptsRecord> result = null;
@@ -64,7 +79,8 @@ public class ReceiptDao {
         return result;
 
     }
-    public List<ReceiptsRecord> getAllReceipts() {
-        return dsl.selectFrom(RECEIPTS).fetch();
-    }
+//    public List<ReceiptsRecord> getAllReceipts() {
+//        return dsl.selectFrom(RECEIPTS).fetch();
+//    }
+
 }

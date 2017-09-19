@@ -1,0 +1,33 @@
+#container {border: 1px solid #3407a5;}
+H1 {float: left;}
+.merchant,.amount ,.time{
+
+    padding:20px;
+    display:inline;
+
+}
+.button{
+    background-color:#55A;
+    border: 1px solid #229;
+    width: 100px;
+    float: right;
+    font-size: 2em;
+    color: white;
+    text-align: center;
+}
+.receipt{
+
+    border: 1px solid #b9ffae;
+}
+
+#receiptList {
+    border: 1px solid #4e804d;
+    clear: both;
+}
+.receipt {
+    background-color: #eee;
+    margin-bottom: 5px;
+}
+.tagValue{
+    margin-left: 10px;
+}
