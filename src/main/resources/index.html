@@ -1,4 +1,144 @@
-<html><head>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <style>
+        body {
+            text-align: center;
+        }
+
+        video {
+            width: 400px;
+            height: 300px;
+            border: 1px solid black;
+        }
+
+        #vidwrap {
+            margin: 20px 0;
+        }
+
+        #start-camera, #take-pic, #take-pic-cancel {
+            height: 3em;
+        }
+
+        #CameraContainer {
+            /*background-color: orange;*/
+            /*border: 1px solid black;*/
+            /*border-radius: 10px;*/
+            /*padding: 10px 15px 10px 10px;*/
+        }
+    </style>
+    <script>
+        let imageCapture;
+        var camera_stream
+        function attachMediaStream(mediaStream) {
+            $('video')[0].srcObject = mediaStream;
+            camera_stream = mediaStream
+            // Saving the track allows us to capture a photo
+            const track = mediaStream.getVideoTracks()[0];
+            imageCapture = new ImageCapture(track);
+        }
+
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({video: {facingMode: {exact: "environment"}}})
+                .then(attachMediaStream)
+                .catch(error => {
+                    navigator.mediaDevices.getUserMedia({video: true})
+                        .then(attachMediaStream)
+                        .catch(error => {
+                            console.log('you are fooked');
+                        })
+                })
+        }
+
+        function endVideo() {
+            if(camera_stream!=null)
+                camera_stream.getVideoTracks()[0].stop();
+//            $("#vbox").hide();
+            $('#take-pic').prop('disabled', true);
+            $('#take-pic-cancel').prop('disabled', true);
+
+            $('#CameraContainer').hide();
+
+        }
+
+        function takepic() {
+            // create a CANVAS element that is same size as the image
+            imageCapture.takePhoto()
+                .then(blob => createImageBitmap(blob))
+                .then(img => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    const base64EncodedImageData = canvas.toDataURL('image/png').split(',')[1];
+//                    alert("baozha")
+                    $.ajax({
+                        url: api + "/images",
+                        type: "POST",
+                        data: base64EncodedImageData,
+                        contentType: "text/plain",
+                        success: function() {
+//                            alert("Returned Success")
+                        },
+                    })
+                        .then(response => {
+//                            $('video').after(`<div>got response: <pre>${JSON.stringify(response)}</pre></div>`);
+                            $("#merchant").val(response.merchantName);
+                            $("#amount").val(response.amount);
+                        })
+                        .always(() => console.log('request complete'));
+                    endVideo()
+                    // For debugging, you can uncomment this to see the frame that was captured
+//                    $('BODY').append(canvas);
+                });
+
+        }
+
+        $(function () {
+            $('#start-camera').on('click', startVideo);
+            $('#take-pic-cancel').on('click', endVideo);
+            $('video').on('play', () => $('#take-pic').prop('disabled', false));
+            $('video').on('play', () => $('#take-pic-cancel').prop('disabled', false));
+            $('#take-pic').on('click', takepic);
+        });
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="mystyle.css">
+    <style>
+        .merchant,.amount ,.time{
+
+            padding:20px;
+            display:inline;
+
+        }
+
+        .receipt{
+            border: 1px solid #b9ffae;
+        }
+
+        #save-receipt {
+            display: inline-block;
+            background-color: green;
+            border: 1px solid black;
+            width: 90px;
+            border-radius: 5px;
+            font-size: 1.5em;
+            color: white;
+            text-align: center;
+            cursor: pointer;
+        }
+        .receipt-header {
+            background-color: lightcyan;
+            border-bottom: 1px solid black;
+            width: 400px;
+        }
+
+
+    </style>
+
     <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js">
     </script>
 
@@ -125,126 +265,10 @@
 //            <div class="amount">${$("#amount").val()}</div>
 //            <div class="tagValueBox">
 //            <button class="add-tag">Add +</button></div>
-
-
-
-<!DOCTYPE html>
-<html>
-
-<head>
-    <script data-require="jquery@*" data-semver="3.1.1" src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <style>
-        body {
-            text-align: center;
-        }
-
-        video {
-            width: 400px;
-            height: 300px;
-            border: 1px solid black;
-        }
-
-        #vidwrap {
-            margin: 20px 0;
-        }
-
-        #start, #snapshot {
-            height: 3em;
-        }
-    </style>
-    <script>
-        let imageCapture;
-
-        function attachMediaStream(mediaStream) {
-            $('video')[0].srcObject = mediaStream;
-
-            // Saving the track allows us to capture a photo
-            const track = mediaStream.getVideoTracks()[0];
-            imageCapture = new ImageCapture(track);
-        }
-
-        function startVideo() {
-            navigator.mediaDevices.getUserMedia({video: {facingMode: {exact: "environment"}}})
-                .then(attachMediaStream)
-                .catch(error => {
-                    navigator.mediaDevices.getUserMedia({video: true})
-                        .then(attachMediaStream)
-                        .catch(error => {
-                            console.log('you are fooked');
-                        })
-                })
-        }
-
-        function takeSnapshot() {
-            // create a CANVAS element that is same size as the image
-            imageCapture.takePhoto()
-                .then(blob => createImageBitmap(blob))
-                .then(img => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-
-                    canvas.getContext('2d').drawImage(img, 0, 0);
-                    const base64EncodedImageData = canvas.toDataURL('image/png').split(',')[1];
-                    $.ajax({
-                        url: "/images",
-                        type: "POST",
-                        data: base64EncodedImageData,
-                        contentType: "text/plain",
-                        success: function() {},
-                   })
-                    .then(response => {
-                        $('video').after(`<div>got response: <pre>${JSON.stringify(response)}</pre></div>`);
-                    })
-                    .always(() => console.log('request complete'));
-
-                    // For debugging, you can uncomment this to see the frame that was captured
-                    // $('BODY').append(canvas);
-                });
-
-        }
-
-        $(function () {
-            $('#start').on('click', startVideo);
-            $('video').on('play', () => $('#snapshot').prop('disabled', false));
-            $('#snapshot').on('click', takeSnapshot);
-        });
     </script>
 
-    <link rel="stylesheet" type="text/css" href="mystyle.css">
-    <style>
-        .merchant,.amount ,.time{
-
-            padding:20px;
-            display:inline;
-
-        }
-
-        .receipt{
-            border: 1px solid #b9ffae;
-        }
-
-        #save-receipt {
-            display: inline-block;
-            background-color: green;
-            border: 1px solid black;
-            width: 90px;
-            border-radius: 5px;
-            font-size: 1.5em;
-            color: white;
-            text-align: center;
-            cursor: pointer;
-        }
-        .receipt-header {
-            background-color: lightcyan;
-            border-bottom: 1px solid black;
-            width: 400px;
-        }
 
 
-    </style>
-
-</head>
 
 <body>
 <div id="container">
@@ -263,14 +287,20 @@
     </tr>
     </table>
     </DIV>
-<button id="start">Start Video</button>
-<button id="snapshot" disabled="true">Take a Snapshot!</button>
-<br>
-<div id="vidwrap">
-    <video autoplay></video>
+</div>
+<button id="OCR" onclick="            if ($('#CameraContainer').css('display') == 'none') {
+                $('#CameraContainer').show();
+            }
+            else {
+                endVideo();
+            }">camera</button>
+<div id="CameraContainer" style="display: none">
+<button id="start-camera">Start</button>
+<button id="take-pic-cancel" disabled="true">Cancel</button>
+<button id="take-pic" disabled="true">Take Picture</button>
+        <div id="vidwrap">
+            <video autoplay></video>
+        </div>
     </div>
 </body>
 
-</div>
-</body>
-</html>

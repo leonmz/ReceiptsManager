@@ -1,11 +1,15 @@
 package controllers;
 
+import api.CreateReceiptRequest;
+//import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import api.ReceiptSuggestionResponse;
 import com.google.cloud.vision.v1.*;
 import com.google.protobuf.ByteString;
 import java.math.BigDecimal;
 import java.util.Base64;
 import java.util.Collections;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -24,6 +28,7 @@ public class ReceiptImageController {
         this.requestBuilder = AnnotateImageRequest.newBuilder().addFeatures(ocrFeature);
 
     }
+
 
     /**
      * This borrows heavily from the Google Vision API Docs.  See:
@@ -48,16 +53,33 @@ public class ReceiptImageController {
             String merchantName = null;
             BigDecimal amount = null;
 
-            // Your Algo Here!!
-            // Sort text annotations by bounding polygon.  Top-most non-decimal text is the merchant
-            // bottom-most decimal text is the total amount
             for (EntityAnnotation annotation : res.getTextAnnotationsList()) {
-                out.printf("Position : %s\n", annotation.getBoundingPoly());
-                out.printf("Text: %s\n", annotation.getDescription());
+                //out.printf("Position : %s\n", annotation.getBoundingPoly());
+                String current = annotation.getDescription().toString();
+                if(merchantName==null&&!isNumeric(current))
+                    merchantName= current.split("\n")[0];
+                else if(isNumeric(current))
+                    amount = new BigDecimal(current);
+                out.println(current);
             }
 
             //TextAnnotation fullTextAnnotation = res.getFullTextAnnotation();
+            //out.println(fullTextAnnotation);
             return new ReceiptSuggestionResponse(merchantName, amount);
         }
     }
+
+    private boolean isNumeric(String str)
+    {
+        try
+        {
+            double d = Double.parseDouble(str);
+        }
+        catch(NumberFormatException nfe)
+        {
+            return false;
+        }
+        return true;
+    }
+
 }

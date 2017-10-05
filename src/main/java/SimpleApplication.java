@@ -8,6 +8,7 @@ import org.h2.jdbcx.JdbcConnectionPool;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultConfiguration;
 
+
 public class SimpleApplication extends Application<Configuration> {
     public static void main(String[] args) throws Exception {
         new SimpleApplication().run(args);
